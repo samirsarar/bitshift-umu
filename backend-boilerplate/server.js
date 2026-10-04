@@ -4,7 +4,7 @@ const dotenv = require('dotenv');
 const connectDB = require('./config/db');
 const authRoutes = require('./routes/authRoutes');
 const errorHandler = require('./middleware/errorMiddleware');
-
+// Samir backend practice
 // Load env vars FIRST
 dotenv.config();
 
