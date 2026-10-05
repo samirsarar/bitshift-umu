@@ -39,8 +39,11 @@ export default function ReportsPage({ reports, onNavigate }) {
   const filtered = reports.filter((r) => {
     if (filter !== 'all' && r.type !== filter) return false;
     if (severityFilter !== 'all' && r.severity !== severityFilter) return false;
-    if (search && !r.title.toLowerCase().includes(search.toLowerCase()) &&
-        !r.location.toLowerCase().includes(search.toLowerCase())) return false;
+    const matchesSearch =
+      !search ||
+      (r.title && r.title.toLowerCase().includes(search.toLowerCase())) ||
+      (r.location && r.location.toLowerCase().includes(search.toLowerCase()));
+    if (!matchesSearch) return false;
     return true;
   });
 
@@ -139,15 +142,17 @@ export default function ReportsPage({ reports, onNavigate }) {
 
       <div className="reports-list">
         {filtered.map((report) => {
+          const reportId = report.id || report._id;
+          const reportTime = report.timestamp || report.createdAt || new Date().toISOString();
           const t = DISASTER_TYPES[report.type] || DISASTER_TYPES.other;
-          const isOpen = expanded === report.id;
+          const isOpen = expanded === reportId;
           return (
             <div
-              key={report.id}
+              key={reportId}
               className={`report-card-item ${isOpen ? 'expanded' : ''}`}
               style={{ '--card-color': t.color }}
             >
-              <div className="report-card-main" onClick={() => setExpanded(isOpen ? null : report.id)}>
+              <div className="report-card-main" onClick={() => setExpanded(isOpen ? null : reportId)}>
                 <div className="report-card-left">
                   <div className="report-card-emoji-wrap" style={{ background: `${t.color}22`, borderColor: `${t.color}44` }}>
                     <span>{t.emoji}</span>
@@ -169,7 +174,7 @@ export default function ReportsPage({ reports, onNavigate }) {
                   </div>
                 </div>
                 <div className="report-card-right">
-                  <span className="report-card-time">{timeAgo(report.timestamp)}</span>
+                  <span className="report-card-time">{timeAgo(reportTime)}</span>
                   <span className="report-card-chevron">{isOpen ? '▲' : '▼'}</span>
                 </div>
               </div>
@@ -179,16 +184,21 @@ export default function ReportsPage({ reports, onNavigate }) {
                     <p className="report-card-desc">{report.description}</p>
                   )}
                   <div className="report-card-detail-row">
-                    <span>🕐 Reported: {new Date(report.timestamp).toLocaleString()}</span>
+                    <span>🕐 Reported: {new Date(reportTime).toLocaleString()}</span>
                   </div>
                   <div className="report-card-detail-row">
-                    <span>🆔 ID: {report.id}</span>
+                    <span>🆔 ID: {reportId}</span>
                   </div>
+                  {report.reportedBy && (
+                    <div className="report-card-detail-row">
+                      <span>👤 By: {report.reportedBy}</span>
+                    </div>
+                  )}
                   <button
                     className="btn btn-outline"
                     style={{ marginTop: 8, fontSize: '0.8rem', padding: '6px 14px' }}
                     onClick={() => onNavigate('map')}
-                    id={`report-view-map-${report.id}`}
+                    id={`report-view-map-${reportId}`}
                   >
                     📍 View on Map
                   </button>

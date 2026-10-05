@@ -3,6 +3,7 @@ const cors = require('cors');
 const dotenv = require('dotenv');
 const connectDB = require('./config/db');
 const authRoutes = require('./routes/authRoutes');
+const reportRoutes = require('./routes/reportRoutes');
 const errorHandler = require('./middleware/errorMiddleware');
 // Samir backend practice
 // Load env vars FIRST
@@ -26,6 +27,7 @@ app.get('/health', (req, res) =>
 
 // Routes
 app.use('/api/auth', authRoutes);
+app.use('/api/reports', reportRoutes);
 
 // Error Middleware (must be last)
 app.use(errorHandler);
