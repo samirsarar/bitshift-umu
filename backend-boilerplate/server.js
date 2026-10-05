@@ -5,6 +5,7 @@ const dotenv = require('dotenv');
 const { Server } = require('socket.io');
 const connectDB = require('./config/db');
 const authRoutes = require('./routes/authRoutes');
+const reportRoutes = require('./routes/reportRoutes');
 const emergencyRoutes = require('./routes/emergencyRoutes');
 const errorHandler = require('./middleware/errorMiddleware');
 
@@ -47,6 +48,7 @@ app.get('/health', (req, res) =>
 
 // Routes
 app.use('/api/auth', authRoutes);
+app.use('/api/reports', reportRoutes);
 app.use('/api/emergency', emergencyRoutes);
 
 // Error Middleware (must be last)
@@ -55,4 +57,5 @@ app.use(errorHandler);
 server.listen(PORT, () => {
   console.log(`🚀 Server listening on port ${PORT}`);
   console.log(`📍 Health check: http://localhost:${PORT}/health`);
-});
+});
+

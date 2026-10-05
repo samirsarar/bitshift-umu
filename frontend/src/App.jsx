@@ -1,5 +1,6 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { AuthProvider, useAuth } from './context/AuthContext';
+import { api } from './services/api';
 import Navbar from './components/Navbar';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
@@ -13,13 +14,32 @@ function AppContent() {
   const [currentPage, setCurrentPage] = useState('login');
   const [reports, setReports] = useState([]);
 
+  // Load existing reports from MongoDB backend
+  const fetchReports = async () => {
+    try {
+      const res = await api.getReports();
+      if (res && res.reports) {
+        setReports(res.reports);
+      }
+    } catch (err) {
+      console.error('Failed to load incident reports from backend:', err);
+    }
+  };
+
+  useEffect(() => {
+    fetchReports();
+  }, []);
+
   const navigate = (page) => {
     setCurrentPage(page);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const addReport = (report) => {
-    setReports((prev) => [report, ...prev]);
+    setReports((prev) => [
+      report,
+      ...prev.filter((r) => (r.id || r._id) !== (report.id || report._id)),
+    ]);
   };
 
   // Show loading screen while checking auth

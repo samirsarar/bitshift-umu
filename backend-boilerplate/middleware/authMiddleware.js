@@ -57,4 +57,8 @@ const optionalProtect = async (req, res, next) => {
   next();
 };
 
-module.exports = { protect, optionalProtect };
+module.exports = {
+  protect,
+  optionalProtect,
+  optionalAuth: optionalProtect,
+};

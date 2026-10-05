@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { api } from '../services/api';
 
 const DISASTER_TYPES = [
   { id: 'flood',       emoji: '🌊', label: 'Flood',          color: '#3b82f6' },
@@ -62,6 +63,7 @@ export default function ReportModal({ onClose, onSubmit, mapCenter }) {
   const [geoLoading, setGeoLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [errors, setErrors] = useState({});
+  const [apiError, setApiError] = useState('');
   const suggRef = useRef(null);
   const debounceRef = useRef(null);
 
@@ -132,22 +134,35 @@ export default function ReportModal({ onClose, onSubmit, mapCenter }) {
   const handleSubmit = async () => {
     if (!validateStep()) return;
     setSubmitting(true);
-    let coords = locationCoords;
-    if (!coords && locationText) coords = await forwardGeocode(locationText);
-    const report = {
-      id: `report-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
-      type,
-      severity,
-      title: title.trim(),
-      description: description.trim(),
-      location: locationText,
-      coords: coords || mapCenter || [85.3096, 23.3441],
-      timestamp: new Date().toISOString(),
-      status: 'active',
-    };
-    await new Promise((r) => setTimeout(r, 600));
-    setSubmitting(false);
-    onSubmit(report);
+    setApiError('');
+    try {
+      let coords = locationCoords;
+      if (!coords && locationText) coords = await forwardGeocode(locationText);
+
+      const reportPayload = {
+        type,
+        severity,
+        title: title.trim(),
+        description: description.trim(),
+        location: locationText,
+        coords: coords || mapCenter || [85.3096, 23.3441],
+        status: 'active',
+      };
+
+      const res = await api.createReport(reportPayload);
+      const savedReport = res.report || {
+        ...reportPayload,
+        id: `report-${Date.now()}`,
+        timestamp: new Date().toISOString(),
+      };
+
+      onSubmit(savedReport);
+    } catch (err) {
+      console.error('Failed to submit report:', err);
+      setApiError(err.message || 'Failed to submit report to server. Please try again.');
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   const selectedType = DISASTER_TYPES.find((t) => t.id === type);
@@ -350,8 +365,13 @@ export default function ReportModal({ onClose, onSubmit, mapCenter }) {
                 </div>
                 <div className="report-review-disclaimer">
                   <span>ℹ️</span>
-                  Your report will be visible to all users on the map. Please ensure the information is accurate.
+                  Your report will be saved to the database and visible to all users on the map.
                 </div>
+                {apiError && (
+                  <div className="report-field-error" style={{ marginTop: 12 }}>
+                    ⚠️ {apiError}
+                  </div>
+                )}
               </div>
             </div>
           )}
