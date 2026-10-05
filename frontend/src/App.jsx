@@ -5,14 +5,21 @@ import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import ProfilePage from './pages/ProfilePage';
 import SecurityPage from './pages/SecurityPage';
+import MapPage from './pages/MapPage';
+import ReportsPage from './pages/ReportsPage';
 
 function AppContent() {
   const { isAuthenticated, loading } = useAuth();
   const [currentPage, setCurrentPage] = useState('login');
+  const [reports, setReports] = useState([]);
 
   const navigate = (page) => {
     setCurrentPage(page);
     window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const addReport = (report) => {
+    setReports((prev) => [report, ...prev]);
   };
 
   // Show loading screen while checking auth
@@ -35,7 +42,7 @@ function AppContent() {
 
   // Redirect logic
   const effectivePage = isAuthenticated
-    ? ['profile', 'security'].includes(currentPage)
+    ? ['profile', 'security', 'map', 'reports'].includes(currentPage)
       ? currentPage
       : 'profile'
     : ['login', 'register'].includes(currentPage)
@@ -52,6 +59,10 @@ function AppContent() {
         return <ProfilePage />;
       case 'security':
         return <SecurityPage />;
+      case 'map':
+        return <MapPage reports={reports} onAddReport={addReport} />;
+      case 'reports':
+        return <ReportsPage reports={reports} onNavigate={navigate} />;
       default:
         return <LoginPage onNavigate={navigate} />;
     }
@@ -59,7 +70,7 @@ function AppContent() {
 
   return (
     <div className="app-layout">
-      <Navbar currentPage={effectivePage} onNavigate={navigate} />
+      <Navbar currentPage={effectivePage} onNavigate={navigate} reports={reports} />
       <main className="app-content">{renderPage()}</main>
     </div>
   );

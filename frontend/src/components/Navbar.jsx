@@ -1,6 +1,6 @@
 import { useAuth } from '../context/AuthContext';
 
-export default function Navbar({ currentPage, onNavigate }) {
+export default function Navbar({ currentPage, onNavigate, reports = [] }) {
   const { user, isAuthenticated, logout } = useAuth();
 
   const getInitials = (name) => {
@@ -39,6 +39,23 @@ export default function Navbar({ currentPage, onNavigate }) {
               id="nav-security"
             >
               🔒 Security
+            </button>
+            <button
+              className={`nav-link ${currentPage === 'map' ? 'active' : ''}`}
+              onClick={() => onNavigate('map')}
+              id="nav-map"
+            >
+              🗺️ Map
+            </button>
+            <button
+              className={`nav-link nav-reports-link ${currentPage === 'reports' ? 'active' : ''}`}
+              onClick={() => onNavigate('reports')}
+              id="nav-reports"
+            >
+              🚨 Reports
+              {reports.length > 0 && (
+                <span className="nav-reports-badge">{reports.length}</span>
+              )}
             </button>
             <button className="nav-link logout" onClick={logout} id="nav-logout">
               ↩ Logout
