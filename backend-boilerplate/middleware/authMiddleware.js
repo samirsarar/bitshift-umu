@@ -37,33 +37,24 @@ const protect = async (req, res, next) => {
     return res.status(401).json({ success: false, message: 'Invalid or expired token' });
   }
 };
-
-const optionalAuth = async (req, res, next) => {
+const optionalProtect = async (req, res, next) => {
   let token;
-
-  if (
-    req.headers.authorization &&
-    req.headers.authorization.startsWith('Bearer')
-  ) {
+  if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
     token = req.headers.authorization.split(' ')[1];
   }
 
   if (!token) {
+    req.user = null;
     return next();
   }
 
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    const user = await User.findById(decoded.id);
-
-    if (user && !user.changedPasswordAfter(decoded.iat)) {
-      req.user = user;
-    }
+    req.user = await User.findById(decoded.id);
   } catch (error) {
-    // If token is invalid or expired, continue without attaching req.user
+    req.user = null;
   }
-
   next();
 };
 
-module.exports = { protect, optionalAuth };
+module.exports = { protect };
