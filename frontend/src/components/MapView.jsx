@@ -281,19 +281,44 @@ export default function MapView({ reports = [], onReportClick }) {
   // Initialise map once
   useEffect(() => {
     if (!mapContainer.current || map.current) return;
-    map.current = new mapboxgl.Map({
+    const mapInstance = new mapboxgl.Map({
       container: mapContainer.current,
       style: "mapbox://styles/mapbox/streets-v12",
       center: [85.3096, 23.3441], // Ranchi
       zoom: 11,
     });
-    map.current.addControl(new mapboxgl.NavigationControl(), "bottom-right");
-    map.current.addControl(new mapboxgl.FullscreenControl(), "bottom-right");
-    // Force repaint after style loads so the map fills its container
-    map.current.once("load", () => map.current && map.current.resize());
+    map.current = mapInstance;
+    mapInstance.addControl(new mapboxgl.NavigationControl(), "bottom-right");
+    mapInstance.addControl(new mapboxgl.FullscreenControl(), "bottom-right");
+
+    const resizeTimer1 = setTimeout(() => {
+      if (map.current) map.current.resize();
+    }, 150);
+
+    const resizeTimer2 = setTimeout(() => {
+      if (map.current) map.current.resize();
+    }, 600);
+
+    mapInstance.once("load", () => {
+      if (map.current) map.current.resize();
+    });
+
+    let resizeObserver = null;
+    if (window.ResizeObserver && mapContainer.current) {
+      resizeObserver = new ResizeObserver(() => {
+        if (map.current) map.current.resize();
+      });
+      resizeObserver.observe(mapContainer.current);
+    }
 
     return () => {
-      if (map.current) { map.current.remove(); map.current = null; }
+      clearTimeout(resizeTimer1);
+      clearTimeout(resizeTimer2);
+      if (resizeObserver) resizeObserver.disconnect();
+      if (map.current) {
+        map.current.remove();
+        map.current = null;
+      }
     };
   }, []);
 
@@ -316,9 +341,9 @@ export default function MapView({ reports = [], onReportClick }) {
         // Marker element
         const el = document.createElement('div');
         el.style.cssText =
-          `width:40px;height:40px;border-radius:50%;display:flex;align-items:center;` +
-          `justify-content:center;font-size:20px;background:rgba(7,7,14,0.92);` +
-          `border:2.5px solid ${sevColor};box-shadow:0 0 12px ${sevColor}88;` +
+          `width:38px;height:38px;border-radius:50%;display:flex;align-items:center;` +
+          `justify-content:center;font-size:19px;background:#FFFFFF;` +
+          `border:2.5px solid ${sevColor};box-shadow:0 3px 12px rgba(9,21,64,0.18);` +
           `cursor:pointer;transition:transform 0.15s ease;position:relative;`;
         el.textContent = cfg.emoji;
         el.title = report.title;
@@ -446,17 +471,17 @@ export default function MapView({ reports = [], onReportClick }) {
   // Add origin/destination markers
   const addMarkers = useCallback((origin, dest) => {
     if (!map.current) return;
-    const makeEl = (emoji) => {
+    const makeEl = (emoji, borderColor = "#1B2CC1") => {
       const el = document.createElement("div");
       el.style.cssText =
         "width:36px;height:36px;border-radius:50%;display:flex;align-items:center;" +
-        "justify-content:center;font-size:20px;background:rgba(15,15,35,0.9);" +
-        "border:2px solid #8b5cf6;box-shadow:0 4px 16px rgba(139,92,246,0.5);cursor:pointer;";
+        "justify-content:center;font-size:18px;background:#FFFFFF;" +
+        `border:2.5px solid ${borderColor};box-shadow:0 3px 12px rgba(9,21,64,0.18);cursor:pointer;`;
       el.textContent = emoji;
       return el;
     };
-    const m1 = new mapboxgl.Marker({ element: makeEl("🟢") }).setLngLat(origin).addTo(map.current);
-    const m2 = new mapboxgl.Marker({ element: makeEl("🔴") }).setLngLat(dest).addTo(map.current);
+    const m1 = new mapboxgl.Marker({ element: makeEl("🟢", "#059669") }).setLngLat(origin).addTo(map.current);
+    const m2 = new mapboxgl.Marker({ element: makeEl("🔴", "#DC2626") }).setLngLat(dest).addTo(map.current);
     markersRef.current = [m1, m2];
   }, []);
 

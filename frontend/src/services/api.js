@@ -102,4 +102,72 @@ export const api = {
     });
     return handleResponse(res);
   },
+
+  // Emergency & Critical Locations (SOS, Shelters, Medical, Food/Water, Hazards)
+  getLocations: async (filters = {}) => {
+    const query = new URLSearchParams();
+    if (filters.category && filters.category !== 'all') query.append('category', filters.category);
+    if (filters.status && filters.status !== 'all') query.append('status', filters.status);
+
+    const qs = query.toString() ? `?${query.toString()}` : '';
+    const res = await fetch(`${API_BASE}/emergency/locations${qs}`, {
+      headers: getHeaders(),
+    });
+    return handleResponse(res);
+  },
+
+  createLocation: async (locationData) => {
+    // Generate UUID if not provided
+    const payload = {
+      clientUUID: locationData.clientUUID || `loc_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+      ...locationData,
+    };
+    const res = await fetch(`${API_BASE}/emergency/locations`, {
+      method: 'POST',
+      headers: getHeaders(),
+      body: JSON.stringify(payload),
+    });
+    return handleResponse(res);
+  },
+
+  // Evacuation Routes
+  getRoutes: async () => {
+    const res = await fetch(`${API_BASE}/emergency/routes`, {
+      headers: getHeaders(),
+    });
+    return handleResponse(res);
+  },
+
+  createRoute: async (routeData) => {
+    const payload = {
+      clientUUID: routeData.clientUUID || `route_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+      ...routeData,
+    };
+    const res = await fetch(`${API_BASE}/emergency/routes`, {
+      method: 'POST',
+      headers: getHeaders(),
+      body: JSON.stringify(payload),
+    });
+    return handleResponse(res);
+  },
+
+  updateRouteStatus: async (id, status) => {
+    const res = await fetch(`${API_BASE}/emergency/routes/${id}/status`, {
+      method: 'PATCH',
+      headers: getHeaders(),
+      body: JSON.stringify({ status }),
+    });
+    return handleResponse(res);
+  },
+
+  // Emergency Data Sync (IndexedDB / Offline mesh)
+  syncEmergency: async (syncPayload) => {
+    const res = await fetch(`${API_BASE}/emergency/sync`, {
+      method: 'POST',
+      headers: getHeaders(),
+      body: JSON.stringify(syncPayload),
+    });
+    return handleResponse(res);
+  },
 };
+
